@@ -1,12 +1,8 @@
-import time
-import random
 import socket
 from http.client import HTTPResponse
 from fakesocket import FakeSocket
 import requests
 from bs4 import BeautifulSoup
-import inquirer
-import urllib.parse
 
 
 SSDP_ADDR = "239.255.255.250"
@@ -22,10 +18,6 @@ SSDP_DISCOVER_REQUEST = "M-SEARCH * HTTP/1.1\r\n" + \
 DEVICE_INFO_ENDPOINT = "query/device-info"
 SEARCH_ENDPOINT = "search/browse"
 KEYPRESS_ENDPOINT = "keypress/"
-
-DOWN_KEY = "Down"
-ENTER_KEY = "Select"
-LEFT_KEY = "Left"
 
 
 class RokuSSDPProtocol:
@@ -104,40 +96,3 @@ class RokuSSDPProtocol:
         if resp.status_code != 200:
             raise Exception("Error querying keypress endpoint, status code was {}".format(resp.status_code))
         return BeautifulSoup(resp.text, 'lxml')
-
-
-SHOWS = [
-    ("king of the hill", "hulu"),
-    ("seinfeld", "netflix"),
-    ("community", "hulu")
-]
-
-
-if __name__ == '__main__':
-    protocol = RokuSSDPProtocol()
-    protocol.search_for_devices_n_times(1)
-    protocol.search_devices_until_one_found()
-    device_map = protocol.get_devices()
-    questions = [
-        inquirer.List('device',
-            message="Select a device",
-            choices=device_map.keys())
-        ]
-    answers = inquirer.prompt(questions)
-    selected_device_name = answers['device']
-    (show_name, app) = random.choice(SHOWS)
-    print("Chose {}".format(show_name))
-    print("Launching...")
-    protocol.launch(selected_device_name, show_name, app)
-    time.sleep(30)
-    print("A C T I V A T I N G")
-    protocol.keypress(selected_device_name, LEFT_KEY)
-    time.sleep(.5)
-    for n in range(random.randint(1, 13)):
-        protocol.keypress(selected_device_name, DOWN_KEY)
-        time.sleep(.5)
-    protocol.keypress(selected_device_name, ENTER_KEY)
-    for n in range(random.randint(1, 13)):
-        protocol.keypress(selected_device_name, DOWN_KEY)
-        time.sleep(.5)
-    protocol.keypress(selected_device_name, ENTER_KEY)
